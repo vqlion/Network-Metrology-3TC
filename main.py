@@ -18,7 +18,7 @@ from datetime import *
 # !!! The command is infinite until you stop it: it is a 'while true' command. It gives a result every 30 seconds by default, with a limit rate of 100kbits/s for each instruction
 
 # load the json file
-f = open("results_03112022.json")
+f = open("results_04112022.json")
 data = json.load(f)
 
 ### interesting parameters ###
@@ -33,17 +33,18 @@ data = json.load(f)
 # time_total
 
 # parameters to consider, up to 7 (restricted by number of colors on plot)
-params = ["time_total"]
+params = ["speed_download"]
 
 times = []
-values = [[0 for i in range(len(data))] for j in range(len(params))]
+values = [[0.5 for i in range(len(data))] for j in range(len(params))]
 
 # goes through every line of the json file, and gets its time and the requested parameters in lists so they can be used later
 for i in range(len(data)):
     times.append(datetime.strptime(
         data[i][1]["timestamp"], "%Y-%m-%dT%H:%M:%S"))
     for j in range(len(params)):
-        values[j][i] = data[i][0][params[j]]
+        if(not(params[j] == 'time_total' and (data[i][0][params[j]] > 1 or data[i][0][params[j]] < 0.01))):
+            values[j][i] = data[i][0][params[j]]
 
 # just the plot colors...
 colors = ["r", "b", "g", "c", "m", "y", "k"]
