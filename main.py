@@ -18,7 +18,7 @@ from datetime import *
 # !!! The command is infinite until you stop it: it is a 'while true' command. It gives a result every 30 seconds by default, with a limit rate of 100kbits/s for each instruction
 
 # load the json file
-f = open("results_04112022.json")
+f = open("results_json/results_04112022.json")
 data = json.load(f)
 
 ### interesting parameters ###
