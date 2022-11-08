@@ -6,40 +6,31 @@ import pandas as pd
 from os import listdir
 from os.path import isfile, join
 
-# This script is used to analyse json data from a curl command
-# you may check the complete doc here https://curl.se/docs/manpage.html, basically curl is to fetch a website's page, among many other useful info
-# here is the complete command (shell script)
+## parameters ##
+# parameters to consider, up to 6 (restricted by number of colors on plot)
+params = ['time_total']
+# I'd recommend one parameter at a time, given that the rolling average is also shown
+# Interesting parameters are 'time_total' and 'speed_download'
 
-# while true; do curl --limit-rate 1000K --write-out %{json} https://www.marmiton.org -o saved >> results.json && echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json; sleep 30; done
+rolling_window = 120  # the rolling average window : the number of values per mean
 
-# this gets the loading time of any webiste you put in parameter and outputs it (among many other stuff) to a json file
-# then I added a bit of formating so it scales over time: the json file becomes an array with timestamps so we can read it and plot it!
-# !!! The command is infinite until you stop it: it is a 'while true' command. It gives a result every 30 seconds by default, with a limit rate of 100kbits/s for each instruction
+cut_highs = 2  # to cut absurd values when considering time_total
 
+colors = ["r", "b", "g", "c", "m", "y", "k"]  # just the plot colors...
 
-# load the json file
+# the format of the dates on the graph
+xformatter = mdates.DateFormatter('%H:%M')
+
+## ##
+
 files = [f for f in listdir('results_json/')
          if isfile(join('results_json/', f))]
 data = []
 for f in files:
     data.append(json.load(open('results_json/' + f)))
-
-### interesting parameters ###
-
-# speed_download
-# time_connect
-# time_appconnect
-# time_pretransfer
-# time_namelookup
-# time_starttransfer
-# time_redirect
-# time_total
-
-# parameters to consider, up to 6 (restricted by number of colors on plot)
-params = ['time_total']
+# load the json files and store them in an array
 
 times = [[] for i in range(len(data))]
-
 values = [[[0.5 for k in range(len(data[j]))] for i in range(
     len(params))] for j in range(len(data))]
 
@@ -47,39 +38,37 @@ values = [[[0.5 for k in range(len(data[j]))] for i in range(
 for i in range(len(data)):
     for j in range(len(data[i])):
         times[i].append(datetime.strptime(
-            data[i][j][1]["timestamp"], "%Y-%m-%dT%H:%M:%S"))
+            data[i][j][1]["timestamp"], "%Y-%m-%dT%H:%M:%S"))  # stores the timestamps in the right format at the right place
         for k in range(len(params)):
-            if (not (params[k] == 'time_total' and (data[i][j][0][params[k]] > 2 or data[i][j][0][params[k]] < 0.01))):
+            # check if the value is absurd
+            if (not (params[k] == 'time_total' and (data[i][j][0][params[k]] > cut_highs or data[i][j][0][params[k]] < 0.01))):
                 values[i][k][j] = data[i][j][0][params[k]]
 
-
-# just the plot colors...
-colors = ["r", "b", "g", "c", "m", "y", "k"]
-
-rolling_window = 120 # the rolling average window : the number of values per mean
-
-# plots every parameters, function of time
 fig, axs = plt.subplots(int(len(data) / 2), len(data) - int(len(data) / 2))
+# create a plot window
 
-xformatter = mdates.DateFormatter('%H:%M')
 for i in range(len(data)):
-    for j in range(len(params)):
+    for j in range(len(params)):  # loop through every file and every parameter
         row = 0
         col = i
-        if(i >= int(len(data) / 2)): 
+        if (i >= int(len(data) / 2)):
             row = 1
             col = i - int(len(data) / 2)
+        # to position the graph at the right place
+
         tmp_df = pd.DataFrame({'times': times[i], 'val': values[i][j]})
         tmp_df = tmp_df.set_index('times')
         tmp_avg_df = tmp_df.rolling(window=rolling_window).mean()
 
         axs[row, col].plot(tmp_df, color=colors[j], label=params[j])
-        axs[row, col].plot(tmp_avg_df, color=colors[j + 1], label=f"running avg of {params[j]}")
+        axs[row, col].plot(tmp_avg_df, color=colors[j + 1],
+                           label=f"running avg of {params[j]}")
+
         axs[row, col].grid()
         axs[row, col].legend()
         axs[row, col].set_title(f"values for {times[i][0].date()}", fontsize=8)
         plt.gcf().axes[i].xaxis.set_major_formatter(xformatter)
 
-plt.legend()
-plt.grid()
+plt.gcf().axes[len(data)].xaxis.set_major_formatter(xformatter)
+
 plt.show()
