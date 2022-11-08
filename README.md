@@ -17,9 +17,9 @@ The curl command used is the following :
 ```
 while true; do curl --limit-rate 1000K --write-out %{json} www.example.com -o saved >> results.json && echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json; sleep 30; done
 ```
-The ```--limit-rate 1000K``` part limits the rate to have somewhat regular measures.
-The ```--write-out %{json}``` is to tell curl to output the results in a json format.
-The ```echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json``` part adds a timestamp to the data, to be able to plat it later with python.
+- The ```--limit-rate 1000K``` part limits the rate to have somewhat regular measures.
+- The ```--write-out %{json}``` is to tell curl to output the results in a json format.
+- The ```echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json``` part adds a timestamp to the data, to be able to plat it later with python.
 
 This commands generates a json file located in the current directory. The file is formatted to be an array.
 
