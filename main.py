@@ -6,10 +6,6 @@ import pandas as pd
 from os import listdir
 from os.path import isfile, join
 
-#### vql's spaghetti code, unprecedented genius gift of god below ####
-# just kiding have fun reading this bs
-
-
 # This script is used to analyse json data from a curl command
 # you may check the complete doc here https://curl.se/docs/manpage.html, basically curl is to fetch a website's page, among many other useful info
 # here is the complete command (shell script)
@@ -20,8 +16,8 @@ from os.path import isfile, join
 # then I added a bit of formating so it scales over time: the json file becomes an array with timestamps so we can read it and plot it!
 # !!! The command is infinite until you stop it: it is a 'while true' command. It gives a result every 30 seconds by default, with a limit rate of 100kbits/s for each instruction
 
-# load the json file
 
+# load the json file
 files = [f for f in listdir('results_json/')
          if isfile(join('results_json/', f))]
 data = []
@@ -39,7 +35,7 @@ for f in files:
 # time_redirect
 # time_total
 
-# parameters to consider, up to 7 (restricted by number of colors on plot)
+# parameters to consider, up to 6 (restricted by number of colors on plot)
 params = ['time_total']
 
 times = [[] for i in range(len(data))]
@@ -60,8 +56,9 @@ for i in range(len(data)):
 # just the plot colors...
 colors = ["r", "b", "g", "c", "m", "y", "k"]
 
-# plots every parameters, function of time
+rolling_window = 120 # the rolling average window : the number of values per mean
 
+# plots every parameters, function of time
 fig, axs = plt.subplots(int(len(data) / 2), len(data) - int(len(data) / 2))
 
 xformatter = mdates.DateFormatter('%H:%M')
@@ -74,7 +71,7 @@ for i in range(len(data)):
             col = i - int(len(data) / 2)
         tmp_df = pd.DataFrame({'times': times[i], 'val': values[i][j]})
         tmp_df = tmp_df.set_index('times')
-        tmp_avg_df = tmp_df.rolling(window=120).mean()
+        tmp_avg_df = tmp_df.rolling(window=rolling_window).mean()
 
         axs[row, col].plot(tmp_df, color=colors[j], label=params[j])
         axs[row, col].plot(tmp_avg_df, color=colors[j + 1], label=f"running avg of {params[j]}")
