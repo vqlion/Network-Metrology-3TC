@@ -14,18 +14,23 @@ It simulates an user going in a browser and updating the website's page every 30
 ## Curl command 
 The curl command used is the following :
 
-```
-while true; do curl --limit-rate 1000K --write-out %{json} www.example.com -o saved >> results.json && echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json; sleep 30; done
+```bash
+echo "[[" >> results.json && while true; do curl --limit-rate 1000K --write-out %{json} www.example.com -o saved >> results.json && echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json; sleep 30; done
 ```
 - The ```--limit-rate 1000K``` part limits the rate to have somewhat regular measures.
 - The ```--write-out %{json}``` is to tell curl to output the results in a json format.
-- The ```echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json``` part adds a timestamp to the data, to be able to plat it later with python.
+- The ```echo ",{\"timestamp\": \"$(date +%FT%T)\"}],[" >> results.json``` part adds a timestamp to the data, to be able to plot it later with python.
 
 This commands generates a json file located in the current directory. The file is formatted to be an array.
 
-### ⚠️ Multiple warnings ⚠️
-- this is a ```while true``` command, which means it'll run forever, as long as you don't stop it. You have to stop it at some point (a simple ctrl+C will do)
-- the output json file isn't quite an array. You have to format it a bit for it to become a complete array. Just **add two brackets at the beginning, and make sur the end is also a double bracket**.
+To make the output file an array, you have to run the following command after stopping the while loop of the curl command :
+
+
+```sed -i '$ s/..$//' results.json && echo ']' >> results.json```
+(to will make sure the format of the json file is correct)
+
+### ⚠️ Warning ⚠️
+this is a ```while true``` command, which means it'll run forever, as long as you don't stop it. You have to stop it at some point (a simple ctrl+C will do). Don't forget to type the second command after you stop it! (see above)
 
 ## Usage
 The [main.py](main.py) script reads through every json file in the [results_json](results_json) directory and plots the results and the rolling average. You can change the parameters directly in the python script.
