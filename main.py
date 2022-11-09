@@ -10,7 +10,7 @@ from os.path import isfile, join
 
 params = ['time_total'] # parameters to consider, up to 6 (restricted by number of colors on plot)
 # I'd recommend one parameter at a time, given that the rolling average is also shown
-# Interesting parameters are 'time_total' and 'speed_download'
+# some interesting parameters are 'time_total' and 'speed_download'
 
 rolling_window = 60  # the rolling average window : the number of values per mean
 
@@ -22,11 +22,13 @@ xformatter = mdates.DateFormatter('%H:%M') # the format of the dates on the grap
 
 ## ##
 
-files = [f for f in listdir('results_json/')
-         if isfile(join('results_json/', f))]
+directory = 'ressources/json_files/' 
+
+files = [f for f in listdir(directory)
+         if isfile(join(directory, f))]
 data = []
 for f in files:
-    data.append(json.load(open('results_json/' + f)))
+    data.append(json.load(open(directory + f)))
 # load the json files and store them in an array
 
 times = [[] for i in range(len(data))]
@@ -44,10 +46,8 @@ for i in range(len(data)):
                 values[i][k][j] = data[i][j][0][params[k]]
 
 fig, axs = plt.subplots(len(data))
-# create a plot window
-
 for i in range(len(data)):
-    for j in range(len(params)):  # loop through every file and every parameter*
+    for j in range(len(params)):  # loop through every file and every parameter
         tmp_df = pd.DataFrame({'times': times[i], 'val': values[i][j]})
         tmp_df = tmp_df.set_index('times')
         tmp_avg_df = tmp_df.rolling(window=rolling_window).mean()
@@ -55,7 +55,7 @@ for i in range(len(data)):
         axs[i].plot(tmp_df, color=colors[j], label="Total response time from the server")
         axs[i].plot(tmp_avg_df, color=colors[j + 1],
                         label=f"Rolling average, window = {rolling_window}")
-
+        # plot the given parameter and its rolling average
         axs[i].grid()
         axs[0].legend()
         axs[i].set_title(f"Date: {times[i][0].date()}", fontsize=8)
@@ -64,7 +64,6 @@ for i in range(len(data)):
 fig.text(0.5, 0.04, 'Time of the day', ha='center')
 fig.text(0.04, 0.5, 'Response time from server (s)', va='center', rotation='vertical')
 fig.suptitle("Response time from www.marmiton.org over different days, depending on the hour of the day")
-
-plt.gcf().axes[len(data) - 1].xaxis.set_major_formatter(xformatter)
+# some formatting to make the plot look nice !
 
 plt.show()
