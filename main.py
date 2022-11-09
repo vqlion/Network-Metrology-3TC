@@ -7,19 +7,18 @@ from os import listdir
 from os.path import isfile, join
 
 ## parameters ##
-# parameters to consider, up to 6 (restricted by number of colors on plot)
-params = ['time_total']
+
+params = ['time_total'] # parameters to consider, up to 6 (restricted by number of colors on plot)
 # I'd recommend one parameter at a time, given that the rolling average is also shown
 # Interesting parameters are 'time_total' and 'speed_download'
 
-rolling_window = 120  # the rolling average window : the number of values per mean
+rolling_window = 60  # the rolling average window : the number of values per mean
 
 cut_highs = 2  # to cut absurd values when considering time_total
 
 colors = ["r", "b", "g", "c", "m", "y", "k"]  # just the plot colors...
 
-# the format of the dates on the graph
-xformatter = mdates.DateFormatter('%H:%M')
+xformatter = mdates.DateFormatter('%H:%M') # the format of the dates on the graph
 
 ## ##
 
@@ -44,31 +43,28 @@ for i in range(len(data)):
             if (not (params[k] == 'time_total' and (data[i][j][0][params[k]] > cut_highs or data[i][j][0][params[k]] < 0.01))):
                 values[i][k][j] = data[i][j][0][params[k]]
 
-fig, axs = plt.subplots(int(len(data) / 2), len(data) - int(len(data) / 2))
+fig, axs = plt.subplots(len(data))
 # create a plot window
 
 for i in range(len(data)):
-    for j in range(len(params)):  # loop through every file and every parameter
-        row = 0
-        col = i
-        if (i >= int(len(data) / 2)):
-            row = 1
-            col = i - int(len(data) / 2)
-        # to position the graph at the right place
-
+    for j in range(len(params)):  # loop through every file and every parameter*
         tmp_df = pd.DataFrame({'times': times[i], 'val': values[i][j]})
         tmp_df = tmp_df.set_index('times')
         tmp_avg_df = tmp_df.rolling(window=rolling_window).mean()
+        
+        axs[i].plot(tmp_df, color=colors[j], label="Total response time from the server")
+        axs[i].plot(tmp_avg_df, color=colors[j + 1],
+                        label=f"Rolling average, window = {rolling_window}")
 
-        axs[row, col].plot(tmp_df, color=colors[j], label=params[j])
-        axs[row, col].plot(tmp_avg_df, color=colors[j + 1],
-                           label=f"running avg of {params[j]}")
-
-        axs[row, col].grid()
-        axs[row, col].legend()
-        axs[row, col].set_title(f"values for {times[i][0].date()}", fontsize=8)
+        axs[i].grid()
+        axs[0].legend()
+        axs[i].set_title(f"Date: {times[i][0].date()}", fontsize=8)
         plt.gcf().axes[i].xaxis.set_major_formatter(xformatter)
 
-plt.gcf().axes[len(data)].xaxis.set_major_formatter(xformatter)
+fig.text(0.5, 0.04, 'Time of the day', ha='center')
+fig.text(0.04, 0.5, 'Response time from server (s)', va='center', rotation='vertical')
+fig.suptitle("Response time from www.marmiton.org over different days, depending on the hour of the day")
+
+plt.gcf().axes[len(data) - 1].xaxis.set_major_formatter(xformatter)
 
 plt.show()
